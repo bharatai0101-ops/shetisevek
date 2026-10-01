@@ -1,0 +1,1 @@
+"""ShetiSevek AI application."""

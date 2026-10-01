@@ -1,0 +1,156 @@
+shetisevek-ai/
+|-- .github/
+|   `-- workflows/
+|       `-- ci.yml
+|-- alembic/
+|   |-- versions/
+|   |   `-- de42c1dc74c5_initial_schema.py
+|   |-- env.py
+|   `-- script.py.mako
+|-- app/
+|   |-- api/
+|   |   |-- routes/
+|   |   |   |-- __init__.py
+|   |   |   |-- health.py
+|   |   |   `-- whatsapp.py
+|   |   |-- __init__.py
+|   |   |-- dependencies.py
+|   |   `-- router.py
+|   |-- core/
+|   |   |-- __init__.py
+|   |   |-- config.py
+|   |   |-- constants.py
+|   |   |-- exceptions.py
+|   |   |-- logging.py
+|   |   `-- security.py
+|   |-- db/
+|   |   |-- __init__.py
+|   |   |-- base.py
+|   |   |-- session.py
+|   |   `-- transaction.py
+|   |-- integrations/
+|   |   |-- gemini/
+|   |   |   |-- __init__.py
+|   |   |   |-- client.py
+|   |   |   |-- exceptions.py
+|   |   |   |-- mapper.py
+|   |   |   `-- service.py
+|   |   |-- government_schemes/
+|   |   |   |-- __init__.py
+|   |   |   `-- interface.py
+|   |   |-- image_diagnosis/
+|   |   |   |-- __init__.py
+|   |   |   `-- interface.py
+|   |   |-- knowledge_base/
+|   |   |   |-- __init__.py
+|   |   |   `-- interface.py
+|   |   |-- market_prices/
+|   |   |   |-- __init__.py
+|   |   |   `-- interface.py
+|   |   |-- weather/
+|   |   |   |-- __init__.py
+|   |   |   `-- interface.py
+|   |   |-- whatsapp/
+|   |   |   |-- __init__.py
+|   |   |   |-- client.py
+|   |   |   |-- exceptions.py
+|   |   |   |-- parser.py
+|   |   |   |-- signature.py
+|   |   |   `-- types.py
+|   |   `-- __init__.py
+|   |-- models/
+|   |   |-- __init__.py
+|   |   |-- conversation.py
+|   |   |-- farmer_crop.py
+|   |   |-- farmer_profile.py
+|   |   |-- message.py
+|   |   |-- processing_job.py
+|   |   |-- user.py
+|   |   `-- webhook_event.py
+|   |-- prompts/
+|   |   |-- __init__.py
+|   |   |-- agriculture_safety.py
+|   |   `-- shetisevek.py
+|   |-- repositories/
+|   |   |-- __init__.py
+|   |   |-- conversation_repository.py
+|   |   |-- crop_repository.py
+|   |   |-- farmer_repository.py
+|   |   |-- job_repository.py
+|   |   |-- message_repository.py
+|   |   |-- user_repository.py
+|   |   `-- webhook_repository.py
+|   |-- schemas/
+|   |   |-- __init__.py
+|   |   |-- conversation.py
+|   |   |-- farmer.py
+|   |   |-- message.py
+|   |   |-- user.py
+|   |   `-- whatsapp.py
+|   |-- services/
+|   |   |-- __init__.py
+|   |   |-- chatbot_service.py
+|   |   |-- conversation_service.py
+|   |   |-- crop_service.py
+|   |   |-- farmer_service.py
+|   |   |-- message_service.py
+|   |   `-- user_service.py
+|   |-- utils/
+|   |   |-- __init__.py
+|   |   |-- crypto.py
+|   |   |-- datetime.py
+|   |   |-- retry.py
+|   |   `-- text.py
+|   |-- workers/
+|   |   |-- __init__.py
+|   |   |-- job_service.py
+|   |   |-- main.py
+|   |   `-- processor.py
+|   |-- __init__.py
+|   `-- main.py
+|-- docs/
+|   |-- architecture.md
+|   |-- database.md
+|   |-- deployment.md
+|   |-- folder-tree.txt
+|   |-- gemini-setup.md
+|   |-- meta-whatsapp-setup.md
+|   |-- security.md
+|   `-- verification.md
+|-- scripts/
+|   |-- check_env.py
+|   `-- wait_for_db.py
+|-- tests/
+|   |-- fixtures/
+|   |   |-- whatsapp_image_message.json
+|   |   |-- whatsapp_status.json
+|   |   `-- whatsapp_text_message.json
+|   |-- integration/
+|   |   |-- __init__.py
+|   |   |-- test_idempotency.py
+|   |   |-- test_message_flow.py
+|   |   |-- test_status_updates.py
+|   |   `-- test_webhook.py
+|   |-- unit/
+|   |   |-- __init__.py
+|   |   |-- test_chatbot_service.py
+|   |   |-- test_config_and_logging.py
+|   |   |-- test_gemini_service.py
+|   |   |-- test_job_service.py
+|   |   |-- test_whatsapp_client.py
+|   |   |-- test_whatsapp_parser.py
+|   |   `-- test_whatsapp_signature.py
+|   |-- __init__.py
+|   `-- conftest.py
+|-- .dockerignore
+|-- .env.example
+|-- .gitignore
+|-- Dockerfile
+|-- Makefile
+|-- README.md
+|-- alembic.ini
+|-- docker-compose.yml
+|-- pyproject.toml
+|-- requirements-dev.lock
+|-- requirements.lock
+`-- uv.lock

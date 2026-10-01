@@ -59,7 +59,8 @@ async def engine(settings, migrated_database):
     async with database.begin() as conn:
         await conn.execute(
             text(
-                "TRUNCATE processing_jobs, messages, conversations, farmer_crops, "
+                "TRUNCATE deals, deal_redemptions, finance_entries, processing_jobs, "
+                "messages, conversations, farmer_crops, "
                 "farmer_profiles, users, webhook_events RESTART IDENTITY CASCADE"
             )
         )

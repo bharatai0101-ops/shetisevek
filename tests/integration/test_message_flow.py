@@ -13,6 +13,32 @@ pytestmark = pytest.mark.integration
 URL = "/api/v1/webhooks/whatsapp"
 
 
+async def test_daily_memory_keeps_name_beyond_twenty_messages(api, signed, payload, sessions):
+    from app.services.conversation_service import ConversationService
+
+    await api.post(URL, **signed(payload("wamid.old", "old name")))
+    await api.post(URL, **signed(payload("wamid.name", "majh nav sharad yy")))
+    for index in range(22):
+        await api.post(URL, **signed(payload(f"wamid.turn.{index}", "tomato question")))
+    await api.post(URL, **signed(payload("wamid.recall", "majh nav ky yy")))
+    async with sessions() as session, session.begin():
+        old = (
+            await session.scalars(select(Message).where(Message.whatsapp_message_id == "wamid.old"))
+        ).one()
+        old.created_at = utcnow() - timedelta(hours=25)
+        await session.flush()
+        inbound = (
+            await session.scalars(
+                select(Message).where(Message.whatsapp_message_id == "wamid.recall")
+            )
+        ).one()
+        history = await ConversationService(session).history(inbound)
+        assert len(history) == 24
+        assert history[0].text == "majh nav sharad yy"
+        assert history[-1].text == "majh nav ky yy"
+        assert not any(item.text == "old name" for item in history)
+
+
 async def test_marathi_context_and_outbound_id(api, signed, payload, worker, sessions):
     jobs, chatbot, _ = worker
     await api.post(URL, **signed(payload()))

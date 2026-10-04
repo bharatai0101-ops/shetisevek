@@ -1,3 +1,4 @@
+from datetime import timedelta
 from uuid import UUID
 
 from sqlalchemy import and_, case, func, or_, select
@@ -69,14 +70,16 @@ class MessageRepository:
         assert reply is not None
         return reply
 
-    async def history(self, inbound: Message, limit: int) -> list[Message]:
+    async def history(self, inbound: Message) -> list[Message]:
         parent = aliased(Message)
         logical_order = func.coalesce(parent.sequence, Message.sequence)
         statement = (
             select(Message)
             .outerjoin(parent, Message.reply_to_id == parent.id)
             .where(
-                Message.conversation_id == inbound.conversation_id,
+                Message.user_id == inbound.user_id,
+                func.coalesce(parent.created_at, Message.created_at)
+                >= inbound.created_at - timedelta(hours=24),
                 or_(
                     and_(
                         Message.direction == MessageDirection.INBOUND,
@@ -94,6 +97,5 @@ class MessageRepository:
                 logical_order.desc(),
                 case((Message.direction == MessageDirection.OUTBOUND, 1), else_=0).desc(),
             )
-            .limit(limit)
         )
         return list(reversed(list(await self.session.scalars(statement))))

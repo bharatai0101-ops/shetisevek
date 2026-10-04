@@ -22,7 +22,7 @@ Receipts are saved even if the outbound provider ID is not yet available. The ca
 
 ## Conversation context
 
-History is scoped to the conversation and bounded by count and characters. Messages are sorted logically by inbound sequence followed by that inbound's reply, even when later inbound messages were received before the earlier reply was generated. Future queued messages and outbound messages never accepted by Meta are excluded. Profile context is optional; explicit commands update validated structured fields. A future summarizer can augment the context builder without changing the source of truth.
+History is scoped to the user and a rolling 24-hour window relative to the current inbound message's saved creation time. The old message-count cutoff is removed; the configured character budget still bounds model input. Existing ordering and accepted-reply filters exclude future queued turns and unsent responses. No separate memory records or inferred profile writes are created. Messages are sorted logically by inbound sequence followed by that inbound's reply, even when later inbound messages were received before the earlier reply was generated. Future queued messages and outbound messages never accepted by Meta are excluded. Profile context is optional; explicit commands update validated structured fields. A future summarizer can augment the context builder without changing the source of truth.
 
 ## Honest delivery guarantees
 

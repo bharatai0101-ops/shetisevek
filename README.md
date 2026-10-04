@@ -144,7 +144,7 @@ For local testing, expose port 8000 through your HTTPS tunnel and use its public
 
 ## Conversations, profiles, and crops
 
-All messages and generated answers are stored in PostgreSQL, including failed sends. Recent history is reconstructed for every Gemini call, in logical conversation order, bounded by `CONVERSATION_HISTORY_LIMIT` and a character budget. A reply to "पीक 45 दिवसांचे आहे" receives the earlier onion discussion. Future queued turns and undelivered generated answers are excluded from earlier prompts. This is bounded recent memory, not an unlimited summary of every past message.
+All messages and generated answers are stored in PostgreSQL, including failed sends. The same farmer's last 24 hours of saved conversation are reconstructed for every Gemini call in logical order, without the former 20-message cutoff. The configured character budget still bounds model input; unusually long daily chats can exceed it. Existing message/question storage is unchanged; no extra memory table or automatic profile writes are added. `CONVERSATION_HISTORY_LIMIT` is a legacy setting and no longer limits recall. A reply to "पीक 45 दिवसांचे आहे" receives the earlier onion discussion. Future queued turns and undelivered generated answers are excluded from earlier prompts. This is bounded recent memory, not an unlimited summary of every past message.
 
 Each new user gets an optional empty profile and an active conversation without a registration questionnaire. Structured data changes require explicit input; the service does not silently infer a village, farm size, or crop record from uncertain AI extraction. Natural conversation remains available at all times. The following optional text commands save fields through validated services:
 

@@ -78,9 +78,7 @@ class Processor:
                     session, user.id, inbound.id, inbound.text_content or ""
                 )
                 farmer = await FarmerService(session).context(user.id)
-                history = await ConversationService(session).history(
-                    inbound, self.settings.conversation_history_limit
-                )
+                history = await ConversationService(session).history(inbound)
         if outbound is None:
             # No database transaction is held across generation; conversation advisory lock remains.
             text = await self.chatbot.reply(history, farmer, len(history) == 1, command_result)

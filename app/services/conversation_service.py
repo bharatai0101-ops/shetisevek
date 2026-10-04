@@ -9,8 +9,8 @@ class ConversationService:
     def __init__(self, session: AsyncSession) -> None:
         self.messages = MessageRepository(session)
 
-    async def history(self, inbound: Message, limit: int) -> list[HistoryMessage]:
-        messages = await self.messages.history(inbound, limit)
+    async def history(self, inbound: Message) -> list[HistoryMessage]:
+        messages = await self.messages.history(inbound)
         return [
             HistoryMessage(role=m.role, message_type=m.message_type, text=m.text_content)
             for m in messages

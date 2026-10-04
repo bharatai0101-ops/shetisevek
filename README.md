@@ -162,7 +162,7 @@ The centralized prompts instruct ShetiSevek AI to follow the farmer's language, 
 
 Text, button text, and interactive reply titles are used for conversation. Image/audio/video/document/location/contact/reaction/unknown events are recognized and preserved, including media IDs and MIME metadata. The model receives an explicit unavailable-media marker and any supplied caption, never fabricated image analysis.
 
-Gemini Google Search grounding is enabled for current weather, market prices, agricultural news and government schemes. The bot asks for missing market/location details, reports source dates and appends retrieved source links. Search coverage and freshness are not guaranteed. Dedicated weather, market-price, government-scheme and knowledge providers still have interfaces only; image diagnosis is not connected. See [Gemini setup](docs/gemini-setup.md) for supported-model configuration and live acceptance checks.
+Gemini Google Search grounding is enabled for current weather, market prices, agricultural news and government schemes. The bot asks for missing market/location details, reports data dates and gives short answers without appending source links. Search coverage and freshness are not guaranteed. Dedicated weather, market-price, government-scheme and knowledge providers still have interfaces only; image diagnosis is not connected. See [Gemini setup](docs/gemini-setup.md) for supported-model configuration and live acceptance checks.
 
 ## Docker
 

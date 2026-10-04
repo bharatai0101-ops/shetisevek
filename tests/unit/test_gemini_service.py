@@ -6,7 +6,7 @@ from google.genai import errors, types
 from app.core.constants import MessageRole, MessageType
 from app.integrations.gemini.exceptions import GeminiError
 from app.integrations.gemini.mapper import map_history
-from app.integrations.gemini.service import GeminiService, grounded_reply
+from app.integrations.gemini.service import GeminiService
 from app.schemas.message import HistoryMessage
 
 
@@ -45,39 +45,31 @@ async def test_mocked_gemini_response(settings):
     assert "Current UTC date:" in config.system_instruction
 
 
-def test_grounded_sources_preserved_and_deduplicated():
-    response = types.GenerateContentResponse(
-        candidates=[
-            types.Candidate(
-                grounding_metadata=types.GroundingMetadata(
-                    grounding_chunks=[
-                        types.GroundingChunk(
-                            web=types.GroundingChunkWeb(
-                                uri="https://example.com/prices", title="Mandi report"
+async def test_grounded_reply_has_no_source_footer_and_is_short(settings):
+    client = MagicMock()
+    client.aio.models.generate_content = AsyncMock(
+        return_value=types.GenerateContentResponse(
+            candidates=[
+                types.Candidate(
+                    content=types.Content(parts=[types.Part(text="Rate " * 300)]),
+                    grounding_metadata=types.GroundingMetadata(
+                        grounding_chunks=[
+                            types.GroundingChunk(
+                                web=types.GroundingChunkWeb(
+                                    uri="https://example.com/prices", title="Mandi report"
+                                )
                             )
-                        ),
-                        types.GroundingChunk(
-                            web=types.GroundingChunkWeb(
-                                uri="https://example.com/prices", title="Duplicate"
-                            )
-                        ),
-                        types.GroundingChunk(
-                            web=types.GroundingChunkWeb(uri="javascript:alert(1)", title="Unsafe")
-                        ),
-                    ]
+                        ]
+                    ),
                 )
-            )
-        ]
+            ]
+        )
     )
-    reply = grounded_reply(response, "Rate " * 1000)
-    assert len(reply) <= 4000
-    assert reply.count("https://example.com/prices") == 1
-    assert "javascript:" not in reply
-    assert reply.endswith("https://example.com/prices")
-
-
-def test_missing_grounding_does_not_fabricate_sources():
-    assert grounded_reply(types.GenerateContentResponse(), "Which market?") == "Which market?"
+    reply = await GeminiService(client, settings).generate(history(), "system")
+    assert len(reply) <= 800
+    assert "Sources" not in reply
+    assert "https://example.com" not in reply
+    assert client.aio.models.generate_content.call_args.kwargs["config"].tools[0].google_search
 
 
 @pytest.mark.parametrize("status,retryable", [(429, True), (503, True), (400, False), (403, False)])

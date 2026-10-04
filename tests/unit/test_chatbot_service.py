@@ -13,4 +13,5 @@ async def test_prompt_includes_identity_safety_and_farmer_context():
     assert "ShetiSevek AI" in prompt
     assert "Marathi" in prompt
     assert "Never invent pesticide" in prompt
-    assert "No weather" in prompt
+    assert "Google Search is available" in prompt
+    assert "google_search_grounding" in prompt

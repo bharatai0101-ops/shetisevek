@@ -25,6 +25,7 @@ class ChatbotService:
                 "connected_capabilities": [
                     "text_conversation",
                     "explicit_profile_and_crop_storage",
+                    "google_search_grounding",
                 ],
             },
             ensure_ascii=False,

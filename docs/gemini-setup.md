@@ -10,6 +10,12 @@ The worker creates one official `google.genai.Client`, uses its async `aio.model
 
 For each call, the mapper reconstructs chronological `user`/`model` turns from PostgreSQL. The centralized system prompt includes agriculture safety instructions and optional farmer context. There is no assumption that Gemini retains previous calls. History is bounded by count and characters; summaries can be added later.
 
-Only text/captions and unavailable-media markers are passed. There is no configured media download, image diagnosis, weather grounding, market lookup or government-scheme retrieval. Review generated agronomic advice and multilingual behavior with real evaluation examples before public deployment.
+Google Search grounding is enabled through `types.Tool(google_search=types.GoogleSearch())` on generation calls. Select a model supporting this tool and check its search quota/billing. No additional search API key is required. Gemini decides whether to search; prompts request searching for current weather, market prices, news and schemes, and clarification when a market or location is missing. The current UTC date is supplied on every call. Dedicated weather and mandi feeds remain unconnected.
+
+Provider-returned HTTPS web source links are appended to WhatsApp answers, deduplicated and kept within the 4,000-character message budget. These indicate retrieved sources, not a guarantee that every claim is correct. Search may return stale or incomplete records; prompts require reporting the actual data date and prohibit invented current values. No search failure silently falls back to an ungrounded generation call. Existing durable-job retry/error handling remains in place.
+
+After deploying the image, verify the configured model with real WhatsApp messages: `Kanda rate` should ask for a market; `Lasalgaon kanda bhav` should show the available report date/unit and sources or clearly state missing data; `Udya paus padel ka?` should ask for location; a location-specific forecast and current agricultural news should cite retrieved sources. Check search quota, provider latency, Marathi/Romanized Marathi and source freshness. Unit tests mock provider calls and do not prove live search access. Search Suggestions HTML returned by Google is not rendered in WhatsApp; review Google's display requirements for this channel before public rollout: https://ai.google.dev/gemini-api/docs/generate-content/google-search.
+
+Only text/captions and unavailable-media markers are passed. Media download and image diagnosis remain unavailable. Review generated agronomic advice and multilingual behavior with real evaluation examples before public deployment.
 
 SDK reference: [Google's official Python GenAI repository](https://github.com/googleapis/python-genai).

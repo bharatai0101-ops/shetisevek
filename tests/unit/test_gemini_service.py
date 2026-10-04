@@ -6,7 +6,7 @@ from google.genai import errors, types
 from app.core.constants import MessageRole, MessageType
 from app.integrations.gemini.exceptions import GeminiError
 from app.integrations.gemini.mapper import map_history
-from app.integrations.gemini.service import GeminiService
+from app.integrations.gemini.service import GeminiService, grounded_reply
 from app.schemas.message import HistoryMessage
 
 
@@ -40,6 +40,44 @@ async def test_mocked_gemini_response(settings):
     )
     assert await GeminiService(client, settings).generate(history(), "system") == "Helpful reply"
     assert client.aio.models.generate_content.call_args.kwargs["model"] == "test-model"
+    config = client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.tools[0].google_search is not None
+    assert "Current UTC date:" in config.system_instruction
+
+
+def test_grounded_sources_preserved_and_deduplicated():
+    response = types.GenerateContentResponse(
+        candidates=[
+            types.Candidate(
+                grounding_metadata=types.GroundingMetadata(
+                    grounding_chunks=[
+                        types.GroundingChunk(
+                            web=types.GroundingChunkWeb(
+                                uri="https://example.com/prices", title="Mandi report"
+                            )
+                        ),
+                        types.GroundingChunk(
+                            web=types.GroundingChunkWeb(
+                                uri="https://example.com/prices", title="Duplicate"
+                            )
+                        ),
+                        types.GroundingChunk(
+                            web=types.GroundingChunkWeb(uri="javascript:alert(1)", title="Unsafe")
+                        ),
+                    ]
+                )
+            )
+        ]
+    )
+    reply = grounded_reply(response, "Rate " * 1000)
+    assert len(reply) <= 4000
+    assert reply.count("https://example.com/prices") == 1
+    assert "javascript:" not in reply
+    assert reply.endswith("https://example.com/prices")
+
+
+def test_missing_grounding_does_not_fabricate_sources():
+    assert grounded_reply(types.GenerateContentResponse(), "Which market?") == "Which market?"
 
 
 @pytest.mark.parametrize("status,retryable", [(429, True), (503, True), (400, False), (403, False)])

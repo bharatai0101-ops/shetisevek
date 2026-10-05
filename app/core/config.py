@@ -9,12 +9,15 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
 
     admin_api_token: SecretStr = SecretStr("")
+    admin_email: str = ""
+    admin_password: SecretStr = SecretStr("")
     finance_email: str = ""
     finance_password: SecretStr = SecretStr("")
 
     app_name: str = "ShetiSevek AI"
     app_env: Literal["development", "test", "production"] = "development"
     debug: bool = False
+    demo_user_growth_enabled: bool = False
     host: str = "0.0.0.0"
     port: int = Field(default=8000, ge=1, le=65535)
     database_url: SecretStr

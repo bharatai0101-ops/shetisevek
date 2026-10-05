@@ -1,6 +1,7 @@
+import asyncio
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from uuid import uuid4
 
 from fastapi import FastAPI, Request, Response
@@ -14,6 +15,7 @@ from app.core.config import Settings, get_settings
 from app.core.exceptions import AppError
 from app.core.logging import configure_logging, request_id_context
 from app.db.session import make_engine, make_sessions
+from app.services.demo_user_growth import run_demo_user_growth
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +28,18 @@ def create_app(settings: Settings | None = None, engine: AsyncEngine | None = No
         database = engine or make_engine(config)
         application.state.settings = config
         application.state.sessions = make_sessions(database)
+        demo_growth = (
+            asyncio.create_task(run_demo_user_growth(database, config))
+            if config.demo_user_growth_enabled
+            else None
+        )
         try:
             yield
         finally:
+            if demo_growth is not None:
+                demo_growth.cancel()
+                with suppress(asyncio.CancelledError):
+                    await demo_growth
             if engine is None:
                 await database.dispose()
 

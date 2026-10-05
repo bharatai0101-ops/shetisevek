@@ -8,6 +8,7 @@ from app.api.routes.commerce import Session, require_admin
 from app.core.constants import MessageDirection
 from app.models import FarmerProfile, Message, User
 from app.models.commerce import Deal, DealRedemption
+from app.utils.farmer_display import farmer_name
 
 router = APIRouter(prefix="/api/v1/admin", dependencies=[Depends(require_admin)])
 
@@ -118,7 +119,7 @@ async def dashboard(session: Session) -> dict[str, Any]:
         "recent_users": [
             {
                 "id": str(user.id),
-                "name": user.display_name or "Farmer",
+                "name": farmer_name(user.display_name, user.id),
                 "state": state or "Not provided",
                 "joined": user.first_seen_at.isoformat(),
             }

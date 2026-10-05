@@ -12,7 +12,7 @@ Pydantic settings use `SecretStr` and hide validation input values. Production r
 
 Structured logs allow only approved correlation fields. Application event names are fixed; library messages and exception bodies are not serialized by the JSON formatter. SQLAlchemy hides bound parameters. Full conversations, phone numbers, tokens, database URLs and raw request bodies are not logged by application code. Uvicorn access logs are disabled because verification tokens occur in GET query strings. Configure upstream proxies and log collectors to redact queries and authorization headers as well.
 
-Responses include no-store, nosniff, deny-framing and no-referrer headers on normal/error-handled requests. Terminate trusted HTTPS at your edge and configure HSTS there. Do not expose public docs/debug/admin/database endpoints. Docker runs API/worker as non-root with a read-only filesystem, a writable temporary mount, dropped capabilities and no-new-privileges.
+Responses include no-store, nosniff, deny-framing and no-referrer headers on normal/error-handled requests. Terminate trusted HTTPS at your edge and configure HSTS there. Swagger UI at `/docs` and the OpenAPI schema at `/openapi.json` are public; admin endpoints still require authentication. Keep debug and database access private. Docker runs API/worker as non-root with a read-only filesystem, a writable temporary mount, dropped capabilities and no-new-privileges.
 
 ## Farmer data
 

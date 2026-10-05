@@ -44,7 +44,11 @@ def create_app(settings: Settings | None = None, engine: AsyncEngine | None = No
                 await database.dispose()
 
     application = FastAPI(
-        title="ShetiSevek AI", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None
+        title="ShetiSevek AI",
+        lifespan=lifespan,
+        docs_url="/docs",
+        redoc_url=None,
+        openapi_url="/openapi.json",
     )
 
     @application.middleware("http")

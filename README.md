@@ -126,7 +126,7 @@ curl http://localhost:8000/health
 curl http://localhost:8000/ready
 ```
 
-`/health` is process liveness. `/ready` checks PostgreSQL and an applied migration revision; it does not test provider credentials or prove worker health. Public API docs/debug endpoints are disabled.
+`/health` is process liveness. `/ready` checks PostgreSQL and an applied migration revision; it does not test provider credentials or prove worker health. Swagger UI is available at `/docs`, with its OpenAPI schema at `/openapi.json`. Admin endpoints still require their authentication headers.
 
 ## Meta and Gemini configuration
 

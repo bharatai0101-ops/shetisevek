@@ -1,5 +1,6 @@
 from app.models.commerce import Deal, DealRedemption, FinanceEntry
 from app.models.conversation import Conversation
+from app.models.dashboard_daily_count import DashboardDailyCount
 from app.models.farmer_crop import FarmerCrop
 from app.models.farmer_profile import FarmerProfile
 from app.models.message import Message
@@ -8,6 +9,7 @@ from app.models.user import User
 from app.models.webhook_event import WebhookEvent
 
 __all__ = [
+    "DashboardDailyCount",
     "Deal",
     "DealRedemption",
     "FinanceEntry",

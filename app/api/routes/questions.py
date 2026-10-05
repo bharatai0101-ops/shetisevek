@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import aliased
 
 from app.api.routes.commerce import Session, require_admin
@@ -39,12 +39,14 @@ async def questions(session: Session) -> dict[str, Any]:
     india = timezone(timedelta(hours=5, minutes=30))
     midnight = datetime.now(india).replace(hour=0, minute=0, second=0, microsecond=0)
     total = await session.scalar(
-        select(func.count(Message.id)).where(Message.direction == MessageDirection.INBOUND)
+        text("SELECT coalesce(sum(count), 0) FROM dashboard_daily_counts WHERE kind = 'questions'")
     )
     today = await session.scalar(
-        select(func.count(Message.id)).where(
-            Message.direction == MessageDirection.INBOUND, Message.created_at >= midnight
-        )
+        text(
+            "SELECT coalesce(sum(count), 0) FROM dashboard_daily_counts "
+            "WHERE kind = 'questions' AND day >= :today"
+        ),
+        {"today": midnight.date()},
     )
     states = dict(
         (state.value, count)
@@ -56,13 +58,14 @@ async def questions(session: Session) -> dict[str, Any]:
             )
         ).all()
     )
-    unqueued = await session.scalar(
-        select(func.count(Message.id))
-        .outerjoin(ProcessingJob, ProcessingJob.message_id == Message.id)
-        .where(Message.direction == MessageDirection.INBOUND, ProcessingJob.id.is_(None))
+    queued = await session.scalar(
+        select(func.count(ProcessingJob.id))
+        .join(Message, ProcessingJob.message_id == Message.id)
+        .where(Message.direction == MessageDirection.INBOUND)
     )
+    unqueued = (total or 0) - (queued or 0)
     items = []
-    for message, name, phone, language, text, provider_id, job_status in records:
+    for message, name, phone, language, reply_text, provider_id, job_status in records:
         metadata = message.raw_payload or {}
         state = job_status.value if job_status else "PENDING"
         status = (
@@ -87,7 +90,7 @@ async def questions(session: Session) -> dict[str, Any]:
                 "language": language or "Not specified",
                 "status": status,
                 "time": message.created_at.astimezone(india).isoformat(),
-                "reply": text,
+                "reply": reply_text,
             }
         )
     return {

@@ -12,7 +12,12 @@ from app.db.base import Base, TimestampMixin, UUIDMixin
 
 class Message(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "messages"
-    __table_args__ = (Index("ix_messages_conversation_sequence", "conversation_id", "sequence"),)
+    __table_args__ = (
+        Index("ix_messages_conversation_sequence", "conversation_id", "sequence"),
+        Index(
+            "ix_messages_direction_created_at", "direction", "created_at", postgresql_include=["id"]
+        ),
+    )
 
     sequence: Mapped[int] = mapped_column(BigInteger, Identity(), unique=True)
     conversation_id: Mapped[UUID] = mapped_column(

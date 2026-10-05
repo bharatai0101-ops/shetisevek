@@ -63,7 +63,11 @@ CATEGORIES = (
 
 
 async def add_generated_questions(
-    connection: AsyncConnection, users: list[tuple[UUID, datetime]], *, additional: bool = False
+    connection: AsyncConnection,
+    users: list[tuple[UUID, datetime]],
+    *,
+    additional: bool = False,
+    question_count: int = 1,
 ) -> int:
     if not users:
         return 0
@@ -104,6 +108,25 @@ async def add_generated_questions(
                 "created_at": timestamp,
             }
         )
+        for offset in range(1, question_count):
+            index = (question_index + offset) % len(QUESTIONS)
+            messages.append(
+                {
+                    **messages[-1],
+                    "id": uuid5(
+                        NAMESPACE_URL,
+                        f"shetisevek-sample-question:{user_id}{suffix}:extra:{offset}",
+                    ),
+                    "whatsapp_message_id": f"demo-market-question-{user_id}{suffix}-{offset}",
+                    "text_content": QUESTIONS[index],
+                    "raw_payload": {
+                        "demo": True,
+                        "category": CATEGORIES[index],
+                        "batch": "cotton-fruit" if additional else "initial",
+                        "source": "generated-user-market-questions",
+                    },
+                }
+            )
     await connection.execute(
         insert(Conversation)
         .values(conversations)

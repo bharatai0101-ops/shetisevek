@@ -78,6 +78,7 @@ class MessageRepository:
             .outerjoin(parent, Message.reply_to_id == parent.id)
             .where(
                 Message.user_id == inbound.user_id,
+                Message.raw_payload["demo"].astext.is_distinct_from("true"),
                 func.coalesce(parent.created_at, Message.created_at)
                 >= inbound.created_at - timedelta(hours=24),
                 or_(

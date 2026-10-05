@@ -1,24 +1,43 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
+from time import monotonic
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 
 from app.api.routes.commerce import Session, require_admin
-from app.core.constants import MessageDirection
-from app.models import FarmerProfile, Message, User
+from app.models import FarmerProfile, User
 from app.models.commerce import Deal, DealRedemption
 from app.utils.farmer_display import farmer_name
 
 router = APIRouter(prefix="/api/v1/admin", dependencies=[Depends(require_admin)])
+_cache: dict[Any, tuple[float, dict[str, Any]]] = {}
+_lock = asyncio.Lock()
 
 
 @router.get("/dashboard")
 async def dashboard(session: Session) -> dict[str, Any]:
+    # Coalesce concurrent refreshes; never cache a failed calculation.
+    async with _lock:
+        cached = _cache.get(session.bind)
+        if cached and monotonic() - cached[0] < 30:
+            return cached[1]
+        result = await build_dashboard(session)
+        _cache[session.bind] = (monotonic(), result)
+        return result
+
+
+async def build_dashboard(session: Session) -> dict[str, Any]:
     now = datetime.now(timezone(timedelta(hours=5, minutes=30)))
     today = now.date()
     start = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=41)
-    total = int(await session.scalar(select(func.count(User.id))) or 0)
+    total = int(
+        await session.scalar(
+            text("SELECT coalesce(sum(count), 0) FROM dashboard_daily_counts WHERE kind = 'users'")
+        )
+        or 0
+    )
     active = int(
         await session.scalar(
             select(func.count(User.id)).where(User.last_seen_at >= now - timedelta(days=7))
@@ -41,26 +60,17 @@ async def dashboard(session: Session) -> dict[str, Any]:
         )
         or 0
     )
-    user_day = func.date(func.timezone("Asia/Kolkata", User.first_seen_at))
-    message_day = func.date(func.timezone("Asia/Kolkata", Message.created_at))
-    user_rows = (
+    daily_rows = (
         await session.execute(
-            select(user_day, func.count(User.id))
-            .where(User.first_seen_at >= start, User.first_seen_at <= now)
-            .group_by(user_day)
+            text(
+                "SELECT kind, day, count FROM dashboard_daily_counts "
+                "WHERE day >= :start AND day <= :today"
+            ),
+            {"start": start.date(), "today": today},
         )
     ).all()
-    question_rows = (
-        await session.execute(
-            select(message_day, func.count(Message.id))
-            .where(
-                Message.created_at >= start,
-                Message.created_at <= now,
-                Message.direction == MessageDirection.INBOUND,
-            )
-            .group_by(message_day)
-        )
-    ).all()
+    user_rows = [(day, count) for kind, day, count in daily_rows if kind == "users"]
+    question_rows = [(day, count) for kind, day, count in daily_rows if kind == "questions"]
     redemption_rows = (
         await session.execute(
             select(DealRedemption.occurred_on, func.sum(DealRedemption.quantity))

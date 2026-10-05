@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDMixin
@@ -23,6 +23,11 @@ class User(UUIDMixin, TimestampMixin, Base):
     display_name: Mapped[str | None] = mapped_column(String(256))
     first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    __table_args__ = (
+        Index("ix_users_recent_activity", last_seen_at.desc(), first_seen_at.desc(), "id"),
+        Index("ix_users_registration", first_seen_at.desc(), "id"),
+    )
 
     farmer_profile: Mapped[FarmerProfile | None] = relationship(back_populates="user", lazy="raise")
     crops: Mapped[list[FarmerCrop]] = relationship(back_populates="user", lazy="raise")

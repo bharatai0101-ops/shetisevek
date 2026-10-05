@@ -72,6 +72,6 @@ async def run_demo_user_growth(engine: AsyncEngine, settings: Settings) -> None:
                     .values(profiles)
                     .on_conflict_do_nothing(index_elements=[FarmerProfile.user_id])
                 )
-                await add_generated_questions(connection, question_users)
+                await add_generated_questions(connection, question_users, question_count=11)
         except Exception:
             logger.error("demo_user_growth_tick_failed")

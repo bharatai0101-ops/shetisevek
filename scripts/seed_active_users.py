@@ -1,14 +1,14 @@
-"""Bring the local seven-day active-user count to 50,482 using existing demo users."""
+"""Bring the local seven-day active-user count to 850,482 using existing demo users."""
 
 import asyncio
 
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.config import get_settings
-from app.db.session import make_engine
 
-TARGET = 50_482
+TARGET = 850_482
 
 
 async def main() -> None:
@@ -16,7 +16,11 @@ async def main() -> None:
     url = make_url(settings.database_url.get_secret_value())
     if settings.app_env != "development" or url.host not in {"localhost", "127.0.0.1", "::1"}:
         raise SystemExit("This demo update requires a local development database")
-    engine = make_engine(settings)
+    engine = create_async_engine(
+        settings.database_url.get_secret_value(),
+        connect_args={"command_timeout": 180},
+        hide_parameters=True,
+    )
     try:
         async with engine.begin() as connection:
             await connection.execute(text("LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE"))

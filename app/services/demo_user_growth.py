@@ -1,4 +1,4 @@
-"""Persist opt-in local demo growth without creating messaging jobs."""
+"""Persist explicitly enabled demo growth without creating messaging jobs."""
 
 import asyncio
 import logging
@@ -8,7 +8,6 @@ from uuid import NAMESPACE_URL, uuid5
 
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.core.config import Settings
@@ -21,10 +20,9 @@ logger = logging.getLogger(__name__)
 
 
 async def run_demo_user_growth(engine: AsyncEngine, settings: Settings) -> None:
-    url = make_url(settings.database_url.get_secret_value())
-    if settings.app_env != "development" or url.host not in {"localhost", "127.0.0.1", "::1"}:
-        logger.error("demo_user_growth_requires_local_development_database")
+    if not settings.demo_user_growth_enabled:
         return
+    logger.info("demo_user_growth_started")
     while True:
         await asyncio.sleep(random.randint(1, 8))
         tick = int(time.time())

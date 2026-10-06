@@ -75,6 +75,13 @@ Operational settings include `APP_ENV`, `DEBUG`, `CONVERSATION_HISTORY_LIMIT`, `
 
 Validate without printing secrets:
 
+`DEMO_USER_GROWTH_ENABLED` defaults to `false`. Set it to `true` to enable automatic
+generated demo users and sample questions, including on production Docker deployments.
+The API adds 1–8 demo users every 1–8 seconds without creating WhatsApp jobs or calling
+providers. These records contribute to admin totals; they are synthetic activity.
+Recreate the API container after changing this setting. Keep `APP_ENV=production` on
+the deployed server. Startup logs include `demo_user_growth_started` when enabled.
+
 ```bat
 python scripts\check_env.py
 ```

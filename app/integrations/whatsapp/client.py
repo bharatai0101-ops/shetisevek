@@ -6,6 +6,7 @@ import httpx
 
 from app.core.config import Settings
 from app.integrations.whatsapp.exceptions import MetaAPIError
+from app.integrations.whatsapp.formatting import format_whatsapp_text
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class WhatsAppClient:
                     "recipient_type": "individual",
                     "to": recipient,
                     "type": "text",
-                    "text": {"body": text, "preview_url": False},
+                    "text": {"body": format_whatsapp_text(text), "preview_url": False},
                     "biz_opaque_callback_data": str(message_id),
                 },
             )

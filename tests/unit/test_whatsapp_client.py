@@ -6,6 +6,37 @@ import pytest
 
 from app.integrations.whatsapp.client import WhatsAppClient
 from app.integrations.whatsapp.exceptions import MetaAPIError
+from app.integrations.whatsapp.formatting import format_whatsapp_text
+
+
+@pytest.mark.parametrize(
+    "source,expected",
+    [
+        (
+            "* **पाण्याची कपात:** माहिती\n* **बाजारभाव:** ₹१२००",
+            "- *पाण्याची कपात:* माहिती\n- *बाजारभाव:* ₹१२००",
+        ),
+        ("*Heading*\n- Existing bullet", "*Heading*\n- Existing bullet"),
+        ("Plain reply: 2 * 3 = 6", "Plain reply: 2 * 3 = 6"),
+        ("**News**: **Update**", "*News*: *Update*"),
+        ("`**literal**`\n```\n**code**\n```", "`**literal**`\n```\n**code**\n```"),
+        ("News\n*", "News\n"),
+    ],
+)
+def test_whatsapp_formatting(source, expected):
+    assert format_whatsapp_text(source) == expected
+    assert format_whatsapp_text(expected) == expected
+
+
+async def test_meta_send_formats_generated_markdown(settings):
+    def handler(request):
+        assert json.loads(request.content)["text"]["body"] == "- *बातमी:* माहिती"
+        return httpx.Response(200, json={"messages": [{"id": "wamid.sent"}]})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        await WhatsAppClient(client, settings).send_text(
+            "919000000001", "* **बातमी:** माहिती", uuid4()
+        )
 
 
 async def test_meta_send(settings):

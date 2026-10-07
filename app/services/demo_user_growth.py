@@ -24,14 +24,14 @@ async def run_demo_user_growth(engine: AsyncEngine, settings: Settings) -> None:
         return
     logger.info("demo_user_growth_started")
     while True:
-        await asyncio.sleep(random.randint(1, 8))
+        await asyncio.sleep(15)
         tick = int(time.time())
         now = utcnow()
-        count = random.randint(1, 8)
+        count = random.randint(1, 2)
         try:
             async with engine.begin() as connection:
                 # A shared tick lock and unique IDs prevent overlapping API instances
-                # from inserting more than eight demo users in the same second.
+                # from inserting more than two demo users in the same second.
                 locked = await connection.scalar(
                     text("SELECT pg_try_advisory_xact_lock(:tick)"), {"tick": tick}
                 )

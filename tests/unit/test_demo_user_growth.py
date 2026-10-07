@@ -13,7 +13,8 @@ async def test_disabled_growth_never_accesses_database(settings):
     engine.begin.assert_not_called()
 
 
-async def test_enabled_production_growth_with_docker_database(settings):
+@pytest.mark.parametrize("batch_size", [1, 2])
+async def test_enabled_production_growth_with_docker_database(settings, batch_size):
     config = settings.model_copy(update={"app_env": "production", "demo_user_growth_enabled": True})
     config.database_url = SecretStr("postgresql+asyncpg://test:test@postgres/shetisevek")
     connection = AsyncMock()
@@ -25,8 +26,8 @@ async def test_enabled_production_growth_with_docker_database(settings):
         patch(
             "app.services.demo_user_growth.asyncio.sleep",
             side_effect=[None, asyncio.CancelledError()],
-        ),
-        patch("app.services.demo_user_growth.random.randint", return_value=1),
+        ) as sleep,
+        patch("app.services.demo_user_growth.random.randint", return_value=batch_size) as randint,
         patch(
             "app.services.demo_user_growth.add_generated_questions", new_callable=AsyncMock
         ) as questions,
@@ -36,3 +37,6 @@ async def test_enabled_production_growth_with_docker_database(settings):
     assert connection.execute.await_count == 2
     questions.assert_awaited_once()
     assert questions.call_args.kwargs["question_count"] == 11
+    assert len(questions.call_args.args[1]) == batch_size
+    assert all(call.args == (15,) for call in sleep.call_args_list)
+    randint.assert_called_once_with(1, 2)

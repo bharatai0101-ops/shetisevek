@@ -1,3 +1,4 @@
+from collections import deque
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -65,8 +66,21 @@ async def questions(session: Session) -> dict[str, Any]:
         .where(Message.direction == MessageDirection.INBOUND)
     )
     unqueued = (total or 0) - (queued or 0)
+    # Rotate farmer queues, preserving newest-first order within each farmer.
+    # Group by user ID because different farmers can share the same display name.
+    farmer_queues: dict[Any, deque[Any]] = {}
+    for record in records:
+        farmer_queues.setdefault(record[0].user_id, deque()).append(record)
+    rotation = deque(farmer_queues.values())
+    interleaved = []
+    while rotation:
+        queue = rotation.popleft()
+        interleaved.append(queue.popleft())
+        if queue:
+            rotation.append(queue)
     items = []
-    for message, name, phone, whatsapp_id, language, reply_text, provider_id, job_status in records:
+    for record in interleaved:
+        message, name, phone, whatsapp_id, language, reply_text, provider_id, job_status = record
         metadata = message.raw_payload or {}
         state = job_status.value if job_status else "PENDING"
         status = (

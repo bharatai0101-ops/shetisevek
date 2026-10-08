@@ -8,7 +8,7 @@ from app.api.routes.commerce import Session, require_admin
 from app.core.constants import MessageDirection
 from app.models import FarmerProfile, Message, User
 from app.utils.datetime import utcnow
-from app.utils.farmer_display import farmer_name, farmer_phone
+from app.utils.farmer_display import demo_display_question_count, farmer_name, farmer_phone
 
 router = APIRouter(prefix="/api/v1/admin", dependencies=[Depends(require_admin)])
 
@@ -65,7 +65,11 @@ async def list_users(session: Session) -> dict[str, Any]:
                     else "Not provided"
                 ),
                 "state": state or "Not provided",
-                "questions": questions,
+                "questions": (
+                    demo_display_question_count(user.id, questions, user.demo_question_count)
+                    if user.whatsapp_user_id.startswith("demo-")
+                    else questions
+                ),
                 "joined": user.first_seen_at.date(),
                 "active": True,
             }

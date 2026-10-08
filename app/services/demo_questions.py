@@ -4,6 +4,7 @@ import random
 from datetime import datetime
 from uuid import NAMESPACE_URL, UUID, uuid5
 
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -67,15 +68,26 @@ async def add_generated_questions(
     users: list[tuple[UUID, datetime]],
     *,
     additional: bool = False,
-    question_count: int = 1,
 ) -> int:
+    if not users:
+        return 0
+    existing = set(
+        await connection.scalars(
+            select(Message.user_id).where(
+                Message.user_id.in_([user_id for user_id, _ in users]),
+                Message.direction == MessageDirection.INBOUND,
+                Message.raw_payload["demo"].astext == "true",
+            )
+        )
+    )
+    users = [(user_id, timestamp) for user_id, timestamp in users if user_id not in existing]
     if not users:
         return 0
     conversations = []
     messages = []
     for user_id, timestamp in users:
         question_index = random.randrange(10 if additional else 0, len(QUESTIONS))
-        suffix = ":cotton-fruit" if additional else ""
+        suffix = ""
         conversation_id = uuid5(NAMESPACE_URL, f"shetisevek-sample-conversation:{user_id}")
         question_id = uuid5(NAMESPACE_URL, f"shetisevek-sample-question:{user_id}{suffix}")
         conversations.append(
@@ -108,25 +120,6 @@ async def add_generated_questions(
                 "created_at": timestamp,
             }
         )
-        for offset in range(1, question_count):
-            index = (question_index + offset) % len(QUESTIONS)
-            messages.append(
-                {
-                    **messages[-1],
-                    "id": uuid5(
-                        NAMESPACE_URL,
-                        f"shetisevek-sample-question:{user_id}{suffix}:extra:{offset}",
-                    ),
-                    "whatsapp_message_id": f"demo-market-question-{user_id}{suffix}-{offset}",
-                    "text_content": QUESTIONS[index],
-                    "raw_payload": {
-                        "demo": True,
-                        "category": CATEGORIES[index],
-                        "batch": "cotton-fruit" if additional else "initial",
-                        "source": "generated-user-market-questions",
-                    },
-                }
-            )
     await connection.execute(
         insert(Conversation)
         .values(conversations)

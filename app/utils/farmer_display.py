@@ -60,6 +60,11 @@ def farmer_phone(phone: str | None) -> str | None:
     return None if phone and phone.startswith("Demo ") else phone
 
 
+def demo_display_question_count(user_id: UUID, actual: int = 0, saved: int | None = None) -> int:
+    """Preserve the existing sample UI count separately from stored messages."""
+    return max(actual, saved or 0, 11 + ((user_id.int & 0xFFFFFFFF) % 20))
+
+
 def generated_farmer_details(user_id: UUID) -> tuple[str, str]:
     """Return a stable generated phone and state; neither is verified contact data."""
     states = [

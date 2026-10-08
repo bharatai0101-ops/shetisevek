@@ -14,7 +14,11 @@ from app.core.config import Settings
 from app.models import FarmerProfile, User
 from app.services.demo_questions import add_generated_questions
 from app.utils.datetime import utcnow
-from app.utils.farmer_display import farmer_name, generated_farmer_details
+from app.utils.farmer_display import (
+    demo_display_question_count,
+    farmer_name,
+    generated_farmer_details,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +54,7 @@ async def run_demo_user_growth(engine: AsyncEngine, settings: Settings) -> None:
                             "whatsapp_user_id": f"demo-live-{tick}-{index}",
                             "phone_number": phone,
                             "display_name": farmer_name(f"Demo Farmer {tick}-{index}", user_id),
+                            "demo_question_count": demo_display_question_count(user_id),
                             "first_seen_at": now,
                             "last_seen_at": now,
                         }
@@ -70,6 +75,6 @@ async def run_demo_user_growth(engine: AsyncEngine, settings: Settings) -> None:
                     .values(profiles)
                     .on_conflict_do_nothing(index_elements=[FarmerProfile.user_id])
                 )
-                await add_generated_questions(connection, question_users, question_count=11)
+                await add_generated_questions(connection, question_users)
         except Exception:
             logger.error("demo_user_growth_tick_failed")

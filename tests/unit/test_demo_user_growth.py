@@ -35,8 +35,14 @@ async def test_enabled_production_growth_with_docker_database(settings, batch_si
         with pytest.raises(asyncio.CancelledError):
             await run_demo_user_growth(engine, config)
     assert connection.execute.await_count == 2
+    user_values = connection.execute.call_args_list[0].args[0].compile().params
+    assert all(
+        11 <= value <= 30
+        for key, value in user_values.items()
+        if key.startswith("demo_question_count_")
+    )
     questions.assert_awaited_once()
-    assert questions.call_args.kwargs["question_count"] == 11
+    assert "question_count" not in questions.call_args.kwargs
     assert len(questions.call_args.args[1]) == batch_size
     assert all(call.args == (15,) for call in sleep.call_args_list)
     randint.assert_called_once_with(1, 2)

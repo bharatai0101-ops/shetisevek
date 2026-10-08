@@ -33,7 +33,7 @@ async def questions(session: Session) -> dict[str, Any]:
             .outerjoin(reply, reply.reply_to_id == Message.id)
             .outerjoin(ProcessingJob, ProcessingJob.message_id == Message.id)
             .where(Message.direction == MessageDirection.INBOUND)
-            .order_by(Message.sequence.desc())
+            .order_by(Message.created_at.desc(), Message.sequence.desc())
             .limit(1000)
         )
     ).all()

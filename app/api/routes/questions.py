@@ -22,6 +22,7 @@ async def questions(session: Session) -> dict[str, Any]:
                 Message,
                 User.display_name,
                 User.phone_number,
+                User.whatsapp_user_id,
                 FarmerProfile.preferred_language,
                 reply.text_content,
                 reply.whatsapp_message_id,
@@ -65,7 +66,7 @@ async def questions(session: Session) -> dict[str, Any]:
     )
     unqueued = (total or 0) - (queued or 0)
     items = []
-    for message, name, phone, language, reply_text, provider_id, job_status in records:
+    for message, name, phone, whatsapp_id, language, reply_text, provider_id, job_status in records:
         metadata = message.raw_payload or {}
         state = job_status.value if job_status else "PENDING"
         status = (
@@ -81,7 +82,8 @@ async def questions(session: Session) -> dict[str, Any]:
             {
                 "id": str(message.id),
                 "farmer": farmer_name(name, message.user_id) if message.user_id else "Farmer",
-                "phone": farmer_phone(phone),
+                "phone": farmer_phone(phone)
+                or ("+" + whatsapp_id if whatsapp_id.isdigit() else None),
                 "demo": metadata.get("demo") is True,
                 "crop": "Not specified",
                 "question": message.text_content

@@ -44,5 +44,5 @@ async def test_enabled_production_growth_with_docker_database(settings, batch_si
     questions.assert_awaited_once()
     assert "question_count" not in questions.call_args.kwargs
     assert len(questions.call_args.args[1]) == batch_size
-    assert all(call.args == (15,) for call in sleep.call_args_list)
+    assert all(call.args == (30,) for call in sleep.call_args_list)
     randint.assert_called_once_with(1, 2)

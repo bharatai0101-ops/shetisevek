@@ -28,7 +28,7 @@ async def run_demo_user_growth(engine: AsyncEngine, settings: Settings) -> None:
         return
     logger.info("demo_user_growth_started")
     while True:
-        await asyncio.sleep(15)
+        await asyncio.sleep(30)
         tick = int(time.time())
         now = utcnow()
         count = random.randint(1, 2)

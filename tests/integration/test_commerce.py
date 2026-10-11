@@ -101,6 +101,7 @@ async def test_deal_crud_and_finance_authentication(api, settings, sessions):
 async def test_whatsapp_users_and_questions_refresh(api, settings, payload, signed):
     settings.admin_api_token = SecretStr("test-admin-token")
     headers = {"X-Admin-Token": "test-admin-token"}
+    today = today_india()
     assert (await api.get("/api/v1/admin/users", headers=headers)).json()["total"] == 0
     assert (await api.get("/api/v1/admin/questions")).status_code == 401
     first = payload(message_id="wamid.live.1", body="How should I irrigate onions?")
@@ -129,5 +130,12 @@ async def test_whatsapp_users_and_questions_refresh(api, settings, payload, sign
     assert len(dashboard["series"]) == 30
     assert sum(day["questions"] for day in dashboard["series"]) == 2
     assert sum(day["new_users"] for day in dashboard["series"]) == 1
+    assert [month["label"] for month in dashboard["growth_monthly"]] == [
+        "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"
+    ]
+    assert all(month["year"] == today.year for month in dashboard["growth_monthly"])
+    assert sum(month["new_users"] for month in dashboard["growth_monthly"]) == (
+        1 if 4 <= today.month <= 10 else 0
+    )
     assert len(dashboard["recent_users"]) == 1
     assert (await api.get("/api/v1/admin/dashboard")).status_code == 401

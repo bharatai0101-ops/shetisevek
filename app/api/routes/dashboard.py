@@ -69,6 +69,26 @@ async def build_dashboard(session: Session) -> dict[str, Any]:
             {"start": start.date(), "today": today},
         )
     ).all()
+    monthly_rows = (
+        await session.execute(
+            text(
+                "SELECT EXTRACT(MONTH FROM day)::int AS month, sum(count) AS new_users "
+                "FROM dashboard_daily_counts "
+                "WHERE kind = 'users' AND day >= :start AND day < :end AND day <= :today "
+                "GROUP BY month"
+            ),
+            {
+                "start": today.replace(month=4, day=1),
+                "end": today.replace(month=11, day=1),
+                "today": today,
+            },
+        )
+    ).all()
+    monthly_users = {month: int(count) for month, count in monthly_rows}
+    growth_monthly = [
+        {"label": label, "year": today.year, "new_users": monthly_users.get(month, 0)}
+        for month, label in enumerate(("Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"), start=4)
+    ]
     user_rows = [(day, count) for kind, day, count in daily_rows if kind == "users"]
     question_rows = [(day, count) for kind, day, count in daily_rows if kind == "questions"]
     redemption_rows = (
@@ -126,6 +146,7 @@ async def build_dashboard(session: Session) -> dict[str, Any]:
         },
         "series": series,
         "growth_weekly": weekly,
+        "growth_monthly": growth_monthly,
         "recent_users": [
             {
                 "id": str(user.id),

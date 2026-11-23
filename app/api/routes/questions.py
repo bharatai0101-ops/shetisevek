@@ -9,7 +9,7 @@ from sqlalchemy.orm import aliased
 from app.api.routes.commerce import Session, require_admin
 from app.core.constants import MessageDirection
 from app.models import FarmerProfile, Message, ProcessingJob, User
-from app.utils.farmer_display import farmer_name, farmer_phone
+from app.utils.farmer_display import farmer_name, farmer_phone_last_four
 
 router = APIRouter(prefix="/api/v1/admin", dependencies=[Depends(require_admin)])
 
@@ -96,8 +96,7 @@ async def questions(session: Session) -> dict[str, Any]:
             {
                 "id": str(message.id),
                 "farmer": farmer_name(name, message.user_id) if message.user_id else "Farmer",
-                "phone": farmer_phone(phone)
-                or ("+" + whatsapp_id if whatsapp_id.isdigit() else None),
+                "phone": farmer_phone_last_four(phone, whatsapp_id),
                 "demo": metadata.get("demo") is True,
                 "crop": "Not specified",
                 "question": message.text_content

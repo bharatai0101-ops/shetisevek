@@ -1,3 +1,4 @@
+import re
 from uuid import UUID
 
 from sqlalchemy import func
@@ -13,8 +14,12 @@ class UserRepository:
         self.session = session
 
     async def upsert(self, whatsapp_id: str, name: str | None) -> User:
+        phone_number = (
+            f"+{whatsapp_id}" if re.fullmatch(r"[1-9][0-9]{6,14}", whatsapp_id) else None
+        )
         statement = insert(User).values(
             whatsapp_user_id=whatsapp_id,
+            phone_number=phone_number,
             display_name=name,
             first_seen_at=utcnow(),
             last_seen_at=utcnow(),
@@ -25,6 +30,7 @@ class UserRepository:
                 "last_seen_at": utcnow(),
                 "updated_at": utcnow(),
                 "display_name": func.coalesce(statement.excluded.display_name, User.display_name),
+                "phone_number": func.coalesce(User.phone_number, statement.excluded.phone_number),
             },
         ).returning(User)
         return (await self.session.scalars(returning)).one()

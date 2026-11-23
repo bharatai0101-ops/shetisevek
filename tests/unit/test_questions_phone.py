@@ -11,14 +11,16 @@ from app.utils.datetime import utcnow
 @pytest.mark.parametrize(
     "phone,whatsapp_id,expected",
     [
-        (None, "919000000001", "+919000000001"),
-        ("", "919000000001", "+919000000001"),
-        ("+91 90000 00001", "919000000001", "+91 90000 00001"),
+        (None, "919000000001", "0001"),
+        ("", "919000000001", "0001"),
+        ("+91 (90000) 0-234", "919000000001", "0234"),
+        ("123", "919000000001", "0001"),
+        ("123", "demo-farmer-1", None),
         (None, "demo-farmer-1", None),
         ("Demo 1", "demo-farmer-1", None),
     ],
 )
-async def test_questions_returns_saved_phone_or_whatsapp_sender(phone, whatsapp_id, expected):
+async def test_questions_returns_last_four_phone_digits(phone, whatsapp_id, expected):
     message = SimpleNamespace(
         id=uuid4(), user_id=uuid4(), raw_payload={}, text_content="Test question",
         created_at=utcnow(),

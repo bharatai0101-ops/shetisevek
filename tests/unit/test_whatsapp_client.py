@@ -14,12 +14,12 @@ from app.integrations.whatsapp.formatting import format_whatsapp_text
     [
         (
             "* **पाण्याची कपात:** माहिती\n* **बाजारभाव:** ₹१२००",
-            "- *पाण्याची कपात:* माहिती\n- *बाजारभाव:* ₹१२००",
+            "- पाण्याची कपात: माहिती\n- बाजारभाव: ₹१२००",
         ),
-        ("*Heading*\n- Existing bullet", "*Heading*\n- Existing bullet"),
-        ("Plain reply: 2 * 3 = 6", "Plain reply: 2 * 3 = 6"),
-        ("**News**: **Update**", "*News*: *Update*"),
-        ("`**literal**`\n```\n**code**\n```", "`**literal**`\n```\n**code**\n```"),
+        ("*Heading*\n- Existing bullet", "Heading\n- Existing bullet"),
+        ("Plain reply: 2 * 3 = 6", "Plain reply: 2 × 3 = 6"),
+        ("**News**: **Update**", "News: Update"),
+        ("`**literal**`\n```\n**code**\n```", "`literal`\n```\ncode\n```"),
         ("News\n*", "News\n"),
     ],
 )
@@ -30,7 +30,7 @@ def test_whatsapp_formatting(source, expected):
 
 async def test_meta_send_formats_generated_markdown(settings):
     def handler(request):
-        assert json.loads(request.content)["text"]["body"] == "- *बातमी:* माहिती"
+        assert json.loads(request.content)["text"]["body"] == "- बातमी: माहिती"
         return httpx.Response(200, json={"messages": [{"id": "wamid.sent"}]})
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
